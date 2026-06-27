@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Move them to each component as much as possible */
+body {
+    /* font-family: "Cabin"; */
+    font-optical-sizing: auto;
+    /* font-weight: <weight>; */
+    font-style: normal;
+    color: rgb(59, 64, 69);
+    font-variation-settings: 'wdth' 100;
+    background-color: #ffffff;
+}
+
+h2 {
+    color: #3d305a;
+    font-size: 18px;
+}
+
+p {
+    color: #555555;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+input[inputmode='text'] {
+    background-color: #f3f1f1;
+}

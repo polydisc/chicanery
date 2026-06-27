@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    # The container only creates an empty `backend_db`; the schema and seed data
+    # are managed by Flyway migrations (backend/src/main/resources/db/migration),
+    # applied on app startup. Reset with `docker-compose -f postgres.yml down -v`.
+    environment:
+      - "POSTGRES_USER=postgres"
+      - "POSTGRES_PASSWORD=postgres"
+      - "POSTGRES_DB=backend_db"
+    ports:
+      - "5432:5432"
