@@ -4,9 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
-  <img src="screenshot-1.png" width="30%" alt="Screenshot 1" />
-  <img src="screenshot-2.png" width="30%" alt="Screenshot 2" />
-  <img src="screenshot-3.png" width="30%" alt="Screenshot 3" />
+  <img src="screenshots/screenshot-1.png" width="30%" alt="Screenshot 1" />
+  <img src="screenshots/screenshot-2.png" width="30%" alt="Screenshot 2" />
+  <img src="screenshots/screenshot-3.png" width="30%" alt="Screenshot 3" />
 </p>
 
 A small online shopping site. You can browse and search products, review them, build a cart, place and pay for an order, track shipment, and cancel before it ships. Includes an admin panel (product management, user blocking, order fulfilment) and in-app notifications.
@@ -20,11 +20,11 @@ It is a portfolio project, running locally only.
 The OpenAPI spec (`openapi/backend-server.yaml`) is the source of truth for the
 HTTP contract. Both backend and frontend sides generate code from it, enforcing type safety.
 
-### Frontend
+### [Frontend](frontend/README.md)
 
 Technology: Typescript + Next.js + React + TailwindCSS
 
-### Backend
+### [Backend](backend/README.md)
 
 Technology: Scala + Http4s + Cats
 
