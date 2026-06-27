@@ -3,6 +3,12 @@
 [![CI](https://github.com/polydisc/chicanery/actions/workflows/ci.yml/badge.svg)](https://github.com/polydisc/chicanery/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+<p align="center">
+  <img src="screenshot-1.png" width="30%" alt="Screenshot 1" />
+  <img src="screenshot-2.png" width="30%" alt="Screenshot 2" />
+  <img src="screenshot-3.png" width="30%" alt="Screenshot 3" />
+</p>
+
 A small online shopping site. You can browse and search products, review them, build a cart, place and pay for an order, track shipment, and cancel before it ships. Includes an admin panel (product management, user blocking, order fulfilment) and in-app notifications.
 
 It is a portfolio project, running locally only.
