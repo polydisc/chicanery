@@ -3,9 +3,10 @@
 [![CI](https://github.com/polydisc/chicanery/actions/workflows/ci.yml/badge.svg)](https://github.com/polydisc/chicanery/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> "You think this is bad? This? This _chicanery_?"
->
-> — Chuck McGill, _Better Call Saul_ (S3E5, "Chicanery")
+> "You think this is bad? This? This _chicanery_?" — Chuck McGill, _Better Call Saul_
+
+
+A small online shopping site project to explore Scala.
 
 <p align="center">
   <img src="screenshots/screenshot-1.png" width="30%" alt="Screenshot 1" />
@@ -13,7 +14,7 @@
   <img src="screenshots/screenshot-3.png" width="30%" alt="Screenshot 3" />
 </p>
 
-A small online shopping site. You can browse and search products, review them, build a cart, place and pay for an order, track shipment, and cancel before it ships. Includes an admin panel (product management, user blocking, order fulfilment) and in-app notifications.
+You can browse and search products, review them, build a cart, place and pay for an order, track shipment, and cancel before it ships. Includes an admin panel (product management, user blocking, order fulfilment) and in-app notifications.
 
 It is a portfolio project, running locally only.
 
