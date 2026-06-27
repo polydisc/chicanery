@@ -3,7 +3,7 @@
 [![CI](https://github.com/polydisc/chicanery/actions/workflows/ci.yml/badge.svg)](https://github.com/polydisc/chicanery/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> "You think this is bad? This? This _chicanery_?" — Chuck McGill, _Better Call Saul_
+> "_You think this is bad? This? This chicanery_?" — Chuck McGill, _Better Call Saul_
 
 
 A small online shopping site project to explore Scala.
