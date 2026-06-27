@@ -1,0 +1,9 @@
+export function Ellipse1(): JSX.Element {
+    return (
+        <svg width='301' height='12' viewBox='0 0 301 12' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <ellipse cx='150.5' cy='6' rx='150.5' ry='6' fill='#F08626' />
+        </svg>
+    );
+}
+
+export default Ellipse1;

@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Check formatting
+        run: sbt scalafmtCheckAll
+      - name: Compile and test
+        run: sbt test
+
+  query-checks:
+    # Runs doobie's analysis of every repository query against a real, migrated
+    # Postgres, validating column names / arity / nullability / Scala<->SQL types.
+    name: DB query analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: backend_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Apply Flyway migrations
+        run: |
+          docker run --rm --network host \
+            -v "$GITHUB_WORKSPACE/backend/src/main/resources/db/migration:/flyway/sql" \
+            flyway/flyway:10-alpine \
+            -url=jdbc:postgresql://localhost:5432/backend_db \
+            -user=postgres -password=postgres migrate
+      - name: Run query checks
+        env:
+          RUN_DB_QUERY_CHECKS: '1'
+          DB_URL: jdbc:postgresql://localhost:5432/backend_db
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: sbt "testOnly shopping.backend.repository.QueryCheckSpec"
+
+  frontend:
+    name: Frontend test & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Unit tests (Vitest)
+        run: npm run test
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build

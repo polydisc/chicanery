@@ -1,0 +1,8 @@
+.idea
+frontend/node_modules
+frontend/.next
+frontend/.env*.local
+target
+backend/.g8/form
+backend/node_modules
+frontend/*.tsbuildinfo

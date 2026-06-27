@@ -1,0 +1,1035 @@
+openapi: 3.1.0
+info:
+  description: 'API Schema for the online shopping back-end server'
+  title: Shopping Website Backend API
+  version: 1.1.0
+servers:
+  - url: /api/v1
+tags:
+  - name: auth
+    description: Authentication
+  - name: product
+    description: Products
+  - name: review
+    description: Product reviews
+  - name: cart
+    description: Shopping cart
+  - name: order
+    description: Orders
+  - name: notification
+    description: In-app notifications
+  - name: admin
+    description: Administration
+paths:
+  /register:
+    post:
+      description: Register a user and return an access token
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Malformed request body
+        '409':
+          description: Email already registered
+        '422':
+          description: Invalid registration payload
+      summary: Register a user and return access token
+      tags:
+        - auth
+  /login:
+    post:
+      description: Login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Malformed request body
+        '403':
+          description: Invalid credentials
+      summary: Returns access token
+      tags:
+        - auth
+    get:
+      description: Refresh access token
+      operationId: refreshAccessToken
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+        '403':
+          description: Invalid or missing token
+      summary: Refresh access token
+      tags:
+        - auth
+  /products/search:
+    get:
+      description: Returns the products matching the query
+      operationId: searchProducts
+      parameters:
+        - name: query
+          in: query
+          required: false
+          description: Free-text match against the product name or category
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          description: Filter to an exact product category
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          description: Zero-based page number
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+      summary: Returns products
+      tags:
+        - product
+  /products/categories:
+    get:
+      description: Returns the distinct product categories
+      operationId: listCategories
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      summary: List product categories
+      tags:
+        - product
+  /products/{productId}:
+    get:
+      description: Returns the details of the product with the given id
+      operationId: getProductById
+      parameters:
+        - description: ID of the product to fetch
+          in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Product not found
+      summary: Find product by ID
+      tags:
+        - product
+  /reviews/{productId}:
+    get:
+      description: Returns the reviews and ratings of the product with the given id
+      operationId: getReviewsByProductId
+      parameters:
+        - description: ID of the product to fetch reviews for
+          in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: The product's reviews (an empty list if it has none)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+      summary: Find reviews by product ID
+      tags:
+        - review
+    post:
+      description: Add a review for a product (requires authentication)
+      operationId: createReview
+      parameters:
+        - description: ID of the product to review
+          in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReview'
+      responses:
+        '201':
+          description: The created review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '404':
+          description: Product not found
+        '422':
+          description: Invalid review (rating must be 1-5, content required)
+      summary: Create a review
+      tags:
+        - review
+  /cart:
+    post:
+      description: Create a new empty cart
+      operationId: createCart
+      responses:
+        '200':
+          description: The new cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+      summary: Create cart
+      tags:
+        - cart
+  /cart/{cartId}:
+    get:
+      description: Get a cart by id
+      operationId: getCart
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: The cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          description: Cart not found
+      summary: Get cart
+      tags:
+        - cart
+  /cart/{cartId}/items:
+    post:
+      description: Add an item to the cart (increments quantity if already present)
+      operationId: addCartItem
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItem'
+      responses:
+        '200':
+          description: The updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          description: Cart or product not found
+        '422':
+          description: Invalid quantity
+      summary: Add cart item
+      tags:
+        - cart
+  /cart/{cartId}/items/{productId}:
+    put:
+      description: Set the quantity of a cart item (0 removes it)
+      operationId: updateCartItem
+      parameters:
+        - name: cartId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItem'
+      responses:
+        '200':
+          description: The updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          description: Cart or item not found
+        '422':
+          description: Invalid quantity
+      summary: Update cart item
+      tags:
+        - cart
+  /orders:
+    post:
+      description: Create an order from a cart (snapshots prices, empties the cart)
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      responses:
+        '200':
+          description: The created order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Cart not found
+        '422':
+          description: Cart is empty or request invalid
+      summary: Create order
+      tags:
+        - order
+    get:
+      description: List the authenticated user's orders
+      operationId: listOrders
+      responses:
+        '200':
+          description: The orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+      summary: List orders
+      tags:
+        - order
+  /orders/{orderId}:
+    get:
+      description: Get an order by id
+      operationId: getOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+      summary: Get order
+      tags:
+        - order
+  /orders/{orderId}/payment:
+    post:
+      description: Pay for an order (NEW -> PROCESSING). Requires a Bearer token.
+      operationId: payOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: The paid order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+        '409':
+          description: Order is not payable (e.g. already paid)
+        '422':
+          description: Invalid payment payload
+      summary: Pay order
+      tags:
+        - order
+  /orders/{orderId}/cancel:
+    post:
+      description: Cancel an order, allowed only while it has not shipped.
+        Requires a Bearer token.
+      operationId: cancelOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: The cancelled order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+        '409':
+          description: Order can no longer be cancelled (already shipped)
+      summary: Cancel order
+      tags:
+        - order
+  /admin/me:
+    get:
+      description: Returns 200 if the caller is an admin (used to gate admin UI).
+        Requires a Bearer token.
+      operationId: adminCheck
+      responses:
+        '200':
+          description: The caller is an admin
+      summary: Admin check
+      tags:
+        - admin
+  /admin/products:
+    post:
+      description: Create a product. Requires an admin Bearer token.
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: The created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '422':
+          description: Invalid product payload
+      summary: Create product
+      tags:
+        - admin
+  /admin/products/{productId}:
+    put:
+      description: Update a product. Requires an admin Bearer token.
+      operationId: updateProduct
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: The updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+        '422':
+          description: Invalid product payload
+      summary: Update product
+      tags:
+        - admin
+    delete:
+      description: Delete a product. Requires an admin Bearer token.
+      operationId: deleteProduct
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Product not found
+        '409':
+          description: Product is referenced by orders/reviews and can't be deleted
+      summary: Delete product
+      tags:
+        - admin
+  /admin/users/{userId}/block:
+    post:
+      description: Block a user. Requires an admin Bearer token.
+      operationId: blockUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: User blocked
+        '404':
+          description: User not found
+        '409':
+          description: Admins cannot be blocked
+      summary: Block user
+      tags:
+        - admin
+  /admin/users/{userId}/unblock:
+    post:
+      description: Unblock a user. Requires an admin Bearer token.
+      operationId: unblockUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: User unblocked
+        '404':
+          description: User not found
+      summary: Unblock user
+      tags:
+        - admin
+  /notifications:
+    get:
+      description: List the authenticated user's notifications (newest first).
+        Requires a Bearer token.
+      operationId: listNotifications
+      responses:
+        '200':
+          description: The notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+      summary: List notifications
+      tags:
+        - notification
+  /notifications/read-all:
+    post:
+      description: Mark all the authenticated user's notifications as read.
+        Requires a Bearer token.
+      operationId: markAllNotificationsRead
+      responses:
+        '204':
+          description: All notifications marked read
+      summary: Mark all notifications read
+      tags:
+        - notification
+  /notifications/{notificationId}/read:
+    post:
+      description: Mark one of the authenticated user's notifications as read.
+        Requires a Bearer token.
+      operationId: markNotificationRead
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Notification marked read
+        '404':
+          description: Notification not found (or not owned by the caller)
+      summary: Mark notification read
+      tags:
+        - notification
+  /admin/orders:
+    get:
+      description: List every order (admin order management). Requires an admin
+        Bearer token.
+      operationId: listAllOrders
+      responses:
+        '200':
+          description: All orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+      summary: List all orders
+      tags:
+        - admin
+  /admin/orders/{orderId}/ship:
+    post:
+      description: Mark an order as shipped (PROCESSING -> SHIPPED), recording
+        the tracking number, carrier and ETA. Requires an admin Bearer token.
+      operationId: shipOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipOrder'
+      responses:
+        '200':
+          description: The shipped order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+        '409':
+          description: Order is not in a shippable state (must be PROCESSING)
+        '422':
+          description: Invalid ship payload
+      summary: Ship order
+      tags:
+        - admin
+  /admin/orders/{orderId}/deliver:
+    post:
+      description: Mark a shipped order as delivered (SHIPPED -> DELIVERED).
+        Requires an admin Bearer token.
+      operationId: deliverOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: The delivered order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+        '409':
+          description: Order is not in a deliverable state (must be SHIPPED)
+      summary: Deliver order
+      tags:
+        - admin
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: john_doe@example.com
+        password:
+          type: string
+          example: secret
+    RegisterRequest:
+      type: object
+      required:
+        - emailAddress
+        - password
+        - firstName
+        - lastName
+      properties:
+        emailAddress:
+          type: string
+          example: john_doe@example.com
+        password:
+          type: string
+          example: secret
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        postalCode:
+          type: string
+          example: '100-0001'
+        address:
+          type: string
+          example: 1-1 Chiyoda, Chiyoda-ku, Tokyo
+    ProductInput:
+      type: object
+      required:
+        - productName
+        - priceJpy
+      properties:
+        productName:
+          type: string
+          description: Must be non-empty (validated server-side -> 422).
+          example: Banana
+        productCategory:
+          type: string
+          example: fruit
+        priceJpy:
+          type: integer
+          format: int32
+          description: Must be >= 0 (validated server-side -> 422).
+          example: 200
+        productImageUrl:
+          type: string
+          example: /combo_examples/banana.png
+    Product:
+      type: object
+      required:
+        - id
+        - productName
+        - priceJpy
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        productName:
+          type: string
+          example: Banana
+        productCategory:
+          type: string
+          example: fruit
+        priceJpy:
+          type: integer
+          format: int32
+          example: 200
+        productImageUrl:
+          type: string
+          example: https://example.com/images/banana.png
+    ProductList:
+      type: object
+      required:
+        - products
+        - pageNumber
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        pageNumber:
+          type: integer
+          format: int32
+          example: 0
+    Review:
+      type: object
+      required:
+        - content
+        - rating
+      properties:
+        content:
+          type: string
+          example: Great product, would buy again.
+        rating:
+          type: integer
+          format: int32
+          example: 5
+    CreateReview:
+      type: object
+      required:
+        - content
+        - rating
+      properties:
+        content:
+          type: string
+          example: Great product, would buy again.
+        rating:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 5
+          example: 5
+    CartItem:
+      type: object
+      required:
+        - productId
+        - productName
+        - unitPriceJpy
+        - quantity
+        - lineTotalJpy
+      properties:
+        productId:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        unitPriceJpy:
+          type: integer
+          format: int32
+        quantity:
+          type: integer
+          format: int32
+        lineTotalJpy:
+          type: integer
+          format: int32
+    Cart:
+      type: object
+      required:
+        - id
+        - items
+        - totalJpy
+      properties:
+        id:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        totalJpy:
+          type: integer
+          format: int32
+    AddCartItem:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int32
+          example: 1
+    UpdateCartItem:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: integer
+          format: int32
+          example: 2
+    CreateOrder:
+      type: object
+      required:
+        - cartId
+        - shippingAddress
+      properties:
+        cartId:
+          type: integer
+          format: int64
+        shippingAddress:
+          type: string
+          example: 1-1 Chiyoda, Chiyoda-ku, Tokyo
+    PaymentRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          description: Payment method. One of card, bank_transfer, cod.
+          enum:
+            - card
+            - bank_transfer
+            - cod
+          example: card
+        details:
+          type: string
+          description: Card number for the `card` method; ignored for
+            bank_transfer / cod. Required (non-empty) when method is `card`.
+          example: '4242 4242 4242 4242'
+    OrderItem:
+      type: object
+      required:
+        - productId
+        - productName
+        - unitPriceJpy
+        - quantity
+        - lineTotalJpy
+      properties:
+        productId:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        unitPriceJpy:
+          type: integer
+          format: int32
+        quantity:
+          type: integer
+          format: int32
+        lineTotalJpy:
+          type: integer
+          format: int32
+    Order:
+      type: object
+      required:
+        - id
+        - items
+        - totalJpy
+        - shippingAddress
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        totalJpy:
+          type: integer
+          format: int32
+        shippingAddress:
+          type: string
+        status:
+          type: string
+          example: NEW
+        orderDate:
+          type: string
+          format: date
+        trackingNumber:
+          type: string
+          description: Carrier tracking number, set once the order ships.
+          example: 1Z999AA10123456784
+        carrier:
+          type: string
+          description: Shipping carrier, set once the order ships.
+          example: Yamato
+        shippedDate:
+          type: string
+          format: date
+          description: Date the order was marked SHIPPED.
+        estimatedDeliveryDate:
+          type: string
+          format: date
+          description: Estimated delivery date (ETA), set once the order ships.
+    ShipOrder:
+      type: object
+      required:
+        - trackingNumber
+        - carrier
+      properties:
+        trackingNumber:
+          type: string
+          example: 1Z999AA10123456784
+        carrier:
+          type: string
+          example: Yamato
+        estimatedDeliveryDate:
+          type: string
+          format: date
+          description: Estimated delivery date (ETA).
+          example: '2026-07-04'
+    Notification:
+      type: object
+      required:
+        - id
+        - notificationType
+        - message
+        - read
+      properties:
+        id:
+          type: integer
+          format: int64
+        notificationType:
+          type: string
+          description: One of ORDER_PLACED, PAID, SHIPPED, DELIVERED, CANCELLED.
+          example: SHIPPED
+        message:
+          type: string
+          example: Order #10 shipped via Yamato (1Z999AA10123456784).
+        read:
+          type: boolean
+          example: false
+        orderId:
+          type: integer
+          format: int64
+          description: The order this notification is about, when applicable.
+        createdAt:
+          type: string
+          format: date-time
+  securitySchemes:
+    # NOTE: cart/order endpoints require a Bearer JWT (see AuthSupport.withUser).
+    # This isn't declared as an OpenAPI `security` requirement because the
+    # scala-http4s-server generator would then rewrite the delegate handlers to
+    # own auth (handle_bearerAuth + WWW-Authenticate challenges), which doesn't
+    # compose with the in-handler verification used here.
+    api_key:
+      in: header
+      name: api_key
+      type: apiKey
