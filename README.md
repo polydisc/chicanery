@@ -6,7 +6,7 @@
 > "_You think this is bad? This? This chicanery_?" — Chuck McGill, _Better Call Saul_
 
 
-A small online shopping site project to explore Scala.
+A local shopping website, a project to explore Scala.
 
 <p align="center">
   <img src="screenshots/screenshot-1.png" width="30%" alt="Screenshot 1" />
